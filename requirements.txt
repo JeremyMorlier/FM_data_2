@@ -1,0 +1,23 @@
+
+# CLIP
+ftfy
+regex
+tqdm
+torch==2.1.0
+torchvision
+# dynov2
+omegaconf
+torchmetrics
+fvcore
+iopath
+submitit
+# dynov2 extras
+# mmcv-full
+# mmsegmentation
+# segment anything
+opencv-python
+pycocotools
+matplotlib
+onnxruntime
+onnx
+

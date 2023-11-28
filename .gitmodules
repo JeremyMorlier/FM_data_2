@@ -1,0 +1,9 @@
+[submodule "third_party/dinov2"]
+	path = third_party/dinov2
+	url = https://github.com/facebookresearch/dinov2
+[submodule "third_party/CLIP"]
+	path = third_party/CLIP
+	url = https://github.com/openai/CLIP
+[submodule "third_party/segment-anything"]
+	path = third_party/segment-anything
+	url = https://github.com/facebookresearch/segment-anything
