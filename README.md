@@ -16,6 +16,7 @@ pip install xformers
 pip install third_party/CLIP
 pip install third_party/segment-anything
 pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com cuml-cu11
+pip install third_party/vit-pytorch
 ```
 
 
@@ -24,3 +25,9 @@ pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com cuml-cu11
 python3 installation_test/clip_test.py
 python3 installation_test/sam_test.py
 ```
+
+
+https://huggingface.co/datasets/dalle-mini/YFCC100M_OpenAI_subset  
+https://huggingface.co/datasets/imagenet_sketch  
+https://huggingface.co/datasets/barkermrl/imagenet-a  
+https://huggingface.co/datasets/vaishaal/ImageNetV2  

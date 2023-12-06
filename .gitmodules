@@ -7,3 +7,9 @@
 [submodule "third_party/segment-anything"]
 	path = third_party/segment-anything
 	url = https://github.com/facebookresearch/segment-anything
+[submodule "third_party/vit-pytorch"]
+	path = third_party/vit-pytorch
+	url = https://github.com/lucidrains/vit-pytorch
+[submodule "third_party/open_clip"]
+	path = third_party/open_clip
+	url = https://github.com/mlfoundations/open_clip
