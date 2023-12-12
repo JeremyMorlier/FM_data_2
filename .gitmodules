@@ -13,3 +13,6 @@
 [submodule "third_party/open_clip"]
 	path = third_party/open_clip
 	url = https://github.com/mlfoundations/open_clip
+[submodule "third_party/MobileSAM"]
+	path = third_party/MobileSAM
+	url = https://github.com/ChaoningZhang/MobileSAM
