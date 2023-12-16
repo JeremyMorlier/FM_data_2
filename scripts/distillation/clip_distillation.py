@@ -8,6 +8,9 @@ import open_clip
 from torch.utils.data import Dataset, DataLoader
 
 from datasets import load_dataset
+
+from dataset import Distribution_dataset, White_dataset
+
 # Use GPU if available otherwise CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -37,6 +40,11 @@ def distillate(teacher, student, criterion, optimizer, dataloader, batch_size, t
         if iteration in checkpoints :
             torch.save(student, name + "_" + str(iterations))
             running_loss = 0.0
+# Teacher Model
+teacher_name = 'RN50-quickgelu'
+pretraining = "yfcc15m"
+teacher, preprocess_train, preprocess_eval = open_clip.create_model_and_transforms(teacher_name, pretrained=pretraining, cache_dir="data/")
+teacher.visual.to(device)
 
 # Parameters
 # Dataset parameters
@@ -44,7 +52,7 @@ cache_path = "/nasbrain/datasets/yfcc"
 batch_size_train = 10
 batch_size_test = 10
 
-
+size = torch.tensor([224, 768])
 # Datasets
 # Yfcc
 yfcc_dataset = load_dataset("dalle-mini/YFCC100M_OpenAI_subset", cache_dir=cache_path)
@@ -52,18 +60,15 @@ yfcc_dataset = load_dataset("dalle-mini/YFCC100M_OpenAI_subset", cache_dir=cache
 yfcc_dataloader = DataLoader(yfcc_dataset, batch_size=batch_size_train, shuffle=False)
 
 # All pixels to random values following the original dataset mean and standard deviation
-random_dataset = random_dataset(size, mean, std)
+distribution = torch.distributions.normal.Normal(torch.tensor([123.675, 116.28, 103.53]), torch.tensor([58.395, 57.12, 57.375]))
+random_dataset = Distribution_dataset(distribution, size, None)
 random_dataloader = DataLoader(random_dataset, batch_size=batch_size_train, shuffle=False)
 
 # All pixels to full value
-white_dataset = white_dataset(size)
+white_dataset = White_dataset(size)
 white_dataloader = DataLoader(white_dataset, batch_size=batch_size_train, shuffle=False)
 
-# Teacher Model
-teacher_name = 'RN50-quickgelu'
-pretraining = "yfcc15m"
-teacher, preprocess_train, preprocess_eval = open_clip.create_model_and_transforms(teacher_name, pretrained=pretraining, cache_dir="data/")
-teacher.visual.to(device)
+
 
 # Search Parameters
 student_names = ["ViT-S-32-alt", "RN-50", "convnext_tiny", "ViT-S-16-alt"]
