@@ -53,6 +53,7 @@ batch_size_train = 10
 batch_size_test = 10
 
 size = torch.tensor([224, 768])
+
 # Datasets
 # Yfcc
 yfcc_dataset = load_dataset("dalle-mini/YFCC100M_OpenAI_subset", cache_dir=cache_path)
@@ -68,8 +69,6 @@ random_dataloader = DataLoader(random_dataset, batch_size=batch_size_train, shuf
 white_dataset = White_dataset(size)
 white_dataloader = DataLoader(white_dataset, batch_size=batch_size_train, shuffle=False)
 
-
-
 # Search Parameters
 student_names = ["ViT-S-32-alt", "RN-50", "convnext_tiny", "ViT-S-16-alt"]
 iterations = 10000
@@ -83,6 +82,5 @@ for student_name in student_names :
         student, student_preprocess_train, student_preprocess_eval = open_clip.create_model_and_transforms(student_name, cache_dir="data/")
         student.visual.to(device)
 
-        #TODO: add preprocess to distillate
         distillate(teacher.visual, student.visual, dataloader, batch_size_train, preprocess_train, student_preprocess_train, iterations, checkpoints)
 
