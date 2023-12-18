@@ -4,9 +4,10 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
-import open_clip
 from torch.utils.data import Dataset, DataLoader
+import torch.optim as optim
 
+import open_clip
 from datasets import load_dataset
 
 from dataset import Distribution_dataset, White_dataset
@@ -15,14 +16,13 @@ from dataset import Distribution_dataset, White_dataset
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-
-def distillate(teacher, student, criterion, optimizer, dataloader, batch_size, teacher_preprocess, student_preprocess, iterations, checkpoints, name) :
+def distillate(name, teacher, student, criterion, optimizer, device, dataloader, batch_size, teacher_preprocess, student_preprocess, iterations, checkpoints=[]) :
 
     running_loss = 0.0
     for iteration in iterations :
         optimizer.zero_grad()
         
-        inputs = next(iter(dataloader)).to(device)
+        inputs = next(dataloader.__iter__()).to(device)
 
         student_inputs = student_preprocess(inputs)
         teacher_inputs = teacher_preprocess(inputs)
@@ -32,14 +32,18 @@ def distillate(teacher, student, criterion, optimizer, dataloader, batch_size, t
             teacher_outputs = teacher(teacher_inputs)
 
         loss = criterion(student_outputs, teacher_outputs)
-        optimizer.step()
-
         running_loss += loss
-        sys.stdout.write(f'\r {name} : {iteration + 1}/{iterations} - loss {round(loss.item() / (batch_size), 3)} ' f' - running loss {round(running_loss.item() / (batch_size), 3)}                       ')
+
+        loss.backward()
+        optimizer.step()
+        
+        sys.stdout.write(f'\r {name} : {iteration + 1}/{iterations} - loss {round(loss.item() / (batch_size), 3)} ' f' - running loss {round(running_loss.item() / ((iteration + 1) * batch_size), 3)}')
 
         if iteration in checkpoints :
+            print("Save at " + str(iteration + 1) + " Iterations")
             torch.save(student, name + "_" + str(iterations))
             running_loss = 0.0
+
 # Teacher Model
 teacher_name = 'RN50-quickgelu'
 pretraining = "yfcc15m"
@@ -75,12 +79,14 @@ iterations = 10000
 checkpoints = [10, 100, 1000, 5000, 10000, 20000, 30000, 40000, iterations]
 dataloaders = [yfcc_dataloader, random_dataloader, white_dataloader]
 
-
-
 for student_name in student_names :
     for dataloader in dataloaders : 
         student, student_preprocess_train, student_preprocess_eval = open_clip.create_model_and_transforms(student_name, cache_dir="data/")
         student.visual.to(device)
+        # Loss 
+        criterion = nn.MSELoss(reduction='sum')
+        optimizer = optim.Adam(student.parameters(), lr=0.001)
 
-        distillate(teacher.visual, student.visual, dataloader, batch_size_train, preprocess_train, student_preprocess_train, iterations, checkpoints)
+        distillate(student_name, teacher.visual, student.visual, criterion, optimizer, device, dataloader, batch_size_train, preprocess_train, student_preprocess_train, iterations, checkpoints)
+
 
