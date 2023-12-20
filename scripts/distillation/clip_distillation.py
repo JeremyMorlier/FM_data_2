@@ -17,73 +17,16 @@ from dataset.distribution_datasets import Distribution_dataset, White_dataset
 
 import PIL
 import io
+
+from common import Adapter, distillate
+
 # Use GPU if available otherwise CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 transform_yfcc = v2.Compose([
         v2.ToImage(), 
         v2.ToDtype(torch.float32, scale=True)
-    ])
-
-class Adapter(nn.Module) :
-    def __init__(self, in_features, out_features) :
-        super(Adapter, self).__init__()
-        self.linear = nn.Linear(in_features, out_features, bias=None)
-    
-    def forward(self, input) :
-        return self.linear(input)
-    
-def distillate(name, teacher, student, criterion, optimizer, device, dataloader, batch_size, teacher_preprocess, student_preprocess, student_dim, teacher_dim, iterations, checkpoints=[]) :
-    adaptor = None
-    if student_dim != teacher_dim :
-        adaptor = Adapter(student_dim, teacher_dim).to(device)
-
-    running_loss = 0.0
-    running_iterations = 0
-
-    results = []
-
-    for iteration in range(0, iterations) :
-        optimizer.zero_grad()
-        
-        if data_name == "yfcc" :
-            inputs = next(dataloader.__iter__())
-            student_temp = []
-            teacher_temp = []
-            for image in inputs["img"] :
-                temp = transform_yfcc(PIL.Image.open(io.BytesIO(image)))
-                student_temp.append(student_preprocess(temp))
-                teacher_temp.append(teacher_preprocess(temp))
-
-            student_inputs = torch.stack((student_temp)).to(device)
-            teacher_inputs = torch.stack((teacher_temp)).to(device)
-        else :
-            inputs = next(dataloader.__iter__()).to(device)
-            student_inputs = student_preprocess(inputs)
-            teacher_inputs = teacher_preprocess(inputs)
-
-        student_outputs = student(student_inputs)
-        if adaptor != None :
-            student_outputs = adaptor(student_outputs)
-
-        with torch.no_grad() :
-            teacher_outputs = teacher(teacher_inputs)
-
-        loss = criterion(student_outputs, teacher_outputs)
-        running_loss += loss
-        running_iterations += 1
-
-        loss.backward()
-        optimizer.step()
-        
-        sys.stdout.write(f'\r {name} : {iteration + 1}/{iterations} - loss {round(loss.item() / (batch_size), 3)} ' f' - running loss {round(running_loss.item() / ((running_iterations + 1) * batch_size), 3)}')
-
-        if (iteration + 1) in checkpoints :
-            print(" \r\nSave at " + str(iteration + 1) + " Iterations")
-            torch.save(student, name + "_" + str(iteration-1) + ".pth")
-            results.append(running_loss)
-            running_loss = 0.0
-            running_iterations = 0
+    ])    
 
 # Teacher Model
 teacher_name = 'RN50-quickgelu'
@@ -139,7 +82,7 @@ for student_name, student_dim in zip(student_names, student_dims) :
 
         name = teacher_name + "_" + student_name + "_" + data_name
 
-        result = distillate(name, teacher.visual, student.visual, criterion, optimizer, device, dataloader, batch_size_train, preprocess_train, student_preprocess_train, student_dim, teacher_dim, iterations, checkpoints)
+        result = distillate(name, teacher.visual, student.visual, criterion, optimizer, device, dataloader, data_name, batch_size_train, preprocess_train, student_preprocess_train, student_dim, teacher_dim, iterations, checkpoints)
         results.append(result)
         results_names.append(name)
 
