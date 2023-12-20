@@ -10,7 +10,6 @@ import torchvision
 from torchvision.transforms import v2
 import torchvision.transforms as transforms
 
-import open_clip
 from datasets import load_dataset
 
 from dataset.distribution_datasets import Distribution_dataset, White_dataset
