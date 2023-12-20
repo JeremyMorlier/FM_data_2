@@ -20,7 +20,7 @@ class Distribution_dataset(Dataset):
         return 10000000
     
     def __getitem__(self, idx):
-        image = self.distribution.sample(self.dims)
+        image = self.distribution.sample(self.size)
         image = image.permute(2, 0, 1)   
 
         if self.transform :
@@ -37,7 +37,6 @@ class White_dataset(Dataset):
     
     def __getitem__(self, idx):
         image = torch.ones(self.size)
-        image = image.permute(2, 0, 1)
         
         if self.transform :
             image = self.transform(image)

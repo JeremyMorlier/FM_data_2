@@ -1,11 +1,13 @@
 import os
-
+import sys
+sys.path.append(sys.path[0] + "/../../third_party/wise_ft/")
+print(sys.path)
 import numpy as np
 
 import torch
+import torch.utils as utils
+import open_clip
 
-import sys
-sys.path.append("/home/j20morli/Documents/Projects/02_mobile_CLIP/third_party/wise_ft")
 from src.models.eval import evaluate
 from src.models.finetune import finetune
 from src.models.modeling import ClassificationHead, ImageEncoder, ImageClassifier
@@ -13,8 +15,28 @@ from src.models.utils import fisher_load
 from src.models.zeroshot import get_zeroshot_classifier
 from src.args import parse_arguments
 
+import time
 
 def clip_eval(args):
+    print(args)
+
+    # Use GPU if available otherwise CPU
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    args.save = "/users/local/j20morli/mobile_clip/result_eval/"
+    args.data_location="/nasbrain/j20morli/"
+    args.load = "/users/local/j20morli/mobile_clip/result_distillation/RN50-quickgelu_RN50_yfcc_4999.pth"
+    args.eval_datasets = ["ImageNet", "ImageNetV2", "ImageNetR", "ImageNetA", "ImageNetSketch"]
+    args.train_dataset = "ImageNet"
+    args.model = "RN50"
+    args.result_db = "/users/local/j20morli/mobile_clip/results/results.json1"
+    args.device = device
+    args.template = "openai_imagenet_template"
+
+    teacher_name = 'RN50-quickgelu'
+    models = ["ViT-S-32-alt", "RN50", "convnext_tiny", "ViT-S-16-alt"]
+    checkpoints = [10, 100, 1000, 5000, 10000, 20000, 30000, 40000, 10000]
+    data_names = ["yfcc", "random", "white"]
     assert args.save is not None, 'Please provide a path to store models'
     
     if args.load is not None :
@@ -43,22 +65,33 @@ def clip_eval(args):
 
     evaluate(zeroshot, args)
     evaluate(finetuned, args)
-    # alphas = args.alpha
-    # for alpha in alphas:
-    #     args.alpha = alpha
-
-    #     theta = _merge(alpha, theta_0, theta_1, fishers, args.fisher_floor)
-
-    #     # update the model (in-place) acccording to the new weights
-    #     finetuned.load_state_dict(theta)
-
-    #     # save model
-    #     finetuned.save(os.path.join(args.save, f'wise_ft_alpha={alpha:.3f}.pt'))
-
-    #     # evaluate
-    #     evaluate(finetuned, args)
-
 
 if __name__ == '__main__':
+
     args = parse_arguments()
+
+    teacher_name = 'RN50-quickgelu'
+    models = ["ViT-S-32-alt", "RN50", "convnext_tiny", "ViT-S-16-alt"]
+    checkpoints = [10, 100, 1000, 5000, 10000, 20000, 30000, 40000, 10000]
+    data_names = ["yfcc", "random", "white"]
+
+    # Use GPU if available otherwise CPU
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    args.save = "/users/local/j20morli/mobile_clip/result_eval/"
+    args.data_location = "/nasbrain/j20morli/"
+    args.eval_datasets = ["ImageNet", "ImageNetV2", "ImageNetR", "ImageNetA", "ImageNetSketch"]
+    args.train_dataset = "ImageNet"
+    args.result_db = "/users/local/j20morli/mobile_clip/results/results.json1"
+    args.device = device
+    args.template = "openai_imagenet_template"
+
+    for model in models :
+        for data_name in data_names :
+            for checkpoint in checkpoints :
+                name = teacher_name + "_" + model + "_" + data_name + "_" + str(checkpoint)
+                args.load = "/users/local/j20morli/mobile_clip/result_distillation/" + name + ".pth"
+                args.model = model
+                clip_eval(args)
+                
     clip_eval(args)
