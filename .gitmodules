@@ -18,4 +18,4 @@
 	url = https://github.com/ChaoningZhang/MobileSAM
 [submodule "third_party/wise-ft"]
 	path = third_party/wise_ft
-	url = https://github.com/mlfoundations/wise-ft
+	url = https://github.com/JeremyMorlier/wise-ft

@@ -1,7 +1,7 @@
 venv_dinov2/*
 venv_mobile_clip/*
+data/*
 installation_test/masked_image.png
 installation_test/sam_vit_b_01ec64.pth
 installation_test/sam_vit_h_4b8939.pth
-installation_test/__pycache__/*
-data/*
+__pycache__/
