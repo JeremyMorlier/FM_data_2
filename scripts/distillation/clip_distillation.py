@@ -4,7 +4,7 @@ sys.path.append("/users/local/j20morli/mobile_clip/")
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 import torch.optim as optim
 import torchvision
 from torchvision.transforms import v2
@@ -18,7 +18,7 @@ from dataset.distribution_datasets import Distribution_dataset, White_dataset
 import PIL
 import io
 
-from common import Adapter, distillate
+from scripts.common import Adapter, distillate
 
 # Use GPU if available otherwise CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -56,18 +56,28 @@ white_dataloader = DataLoader(white_dataset, batch_size=batch_size_train, shuffl
 # Search Parameters
 student_names = ["ViT-S-32-alt", "RN50", "convnext_tiny", "ViT-S-16-alt"]
 student_dims = [256, 1024, 1024, 256]
-iterations = 10000
+# 32*1024 as openclip, clipkd mentions
+n_epochs = 32
+dataset_size = 14808859
+iterations = int(n_epochs*dataset_size/(1024/batch_size_train))
 checkpoints = [10, 100, 1000, 5000, 10000, 20000, 30000, 40000, iterations]
 dataloaders = [yfcc_dataloader, random_dataloader, white_dataloader]
 data_names = ["yfcc", "random", "white"]
+num_examples = [10000, 1000000, 10000000]
 #dataloaders = [random_dataloader, white_dataloader]
 
 results = []
 results_names = []
 for student_name, student_dim in zip(student_names, student_dims) :
     print(student_name)
+    i = 0
     for dataloader, data_name in zip(dataloaders, data_names) : 
         print(data_name)
+        if data_name == "yfcc" :
+            shuffled = yfcc_dataset.shuffle(buffer_size=14808859)
+            yfcc_dataset_head = shuffled.take(num_examples[i])
+            i += 1
+            dataloader = DataLoader(yfcc_dataset, batch_size=batch_size_train, shuffle=False)
         student, student_preprocess_train, student_preprocess_eval = open_clip.create_model_and_transforms(student_name, cache_dir="data/")
         student.visual.to(device)
         

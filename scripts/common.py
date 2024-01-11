@@ -1,6 +1,6 @@
 
 import sys
-
+import time
 sys.path.append("/users/local/j20morli/mobile_clip/")
 
 import torch
@@ -15,7 +15,10 @@ import PIL
 import io
 
 
-transform_yfcc = v2.Compose([
+def convert_to_rgb(image):
+    return image.convert('RGB')
+
+transform_pilTensor = v2.Compose([
         v2.ToImage(), 
         v2.ToDtype(torch.float32, scale=True)
     ])    
@@ -47,7 +50,7 @@ def distillate(name, teacher, student, criterion, optimizer, device, dataloader,
             student_temp = []
             teacher_temp = []
             for image in inputs["img"] :
-                temp = transform_yfcc(PIL.Image.open(io.BytesIO(image)))
+                temp = PIL.Image.open(io.BytesIO(image))
                 student_temp.append(student_preprocess(temp))
                 teacher_temp.append(teacher_preprocess(temp))
 
@@ -55,28 +58,33 @@ def distillate(name, teacher, student, criterion, optimizer, device, dataloader,
             teacher_inputs = torch.stack((teacher_temp)).to(device)
         else :
             inputs = next(dataloader.__iter__()).to(device)
-            student_inputs = student_preprocess(inputs)
-            teacher_inputs = teacher_preprocess(inputs)
+            student_inputs = inputs
+            teacher_inputs = inputs
 
         student_outputs = student(student_inputs)
         if adaptor != None :
             student_outputs = adaptor(student_outputs)
-
+            
         with torch.no_grad() :
             teacher_outputs = teacher(teacher_inputs)
 
+
+        
         loss = criterion(student_outputs, teacher_outputs)
-        running_loss += loss
+        running_loss += loss.detach()
         running_iterations += 1
 
         loss.backward()
         optimizer.step()
         
-        sys.stdout.write(f'\r {name} : {iteration + 1}/{iterations} - loss {round(loss.item() / (batch_size), 3)} ' f' - running loss {round(running_loss.item() / ((running_iterations + 1) * batch_size), 3)}')
+        sys.stdout.write(f'\r {time.strftime("%H:%M:%S", time.gmtime())} {name} : {iteration + 1}/{iterations} - loss {round(loss.item() / (batch_size), 3)} ' f' - running loss {round(running_loss.item() / ((running_iterations + 1) * batch_size), 3)}')
 
         if (iteration + 1) in checkpoints :
-            print(" \r\nSave at " + str(iteration + 1) + " Iterations")
-            torch.save(student, name + "_" + str(iteration-1) + ".pth")
+            save_name = name + "_" + str(iteration+1) + ".pth"
+            torch.save(student.state_dict() , save_name)
+
+            print(" \r\nSave at " + str(iteration + 1) + " Iterations      File Name : " + save_name)
+
             results.append(running_loss)
             running_loss = 0.0
             running_iterations = 0
