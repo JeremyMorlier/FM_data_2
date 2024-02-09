@@ -1,8 +1,7 @@
 import sys
 import PIL
 import io
-
-sys.path.append("/users/local/j20morli/mobile_clip/")
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -30,17 +29,22 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 data_path = "/nasbrain/datasets/sam_dataset/"
 folder_name = "images/"
 
-model_path = "/users/local/j20morli/data/checkpoints/"
+model_path = "/nasbrain/j20morli/sam_checkpoints/"
 
 # Teacher Model
-teacher_name = "vit_b"
-sam_teacher = sam.sam_model_registry[teacher_name](checkpoint=model_path + "/sam_vit_b_01ec64.pth")
+teacher_name = "vit_h"
+sam_teacher = sam.sam_model_registry[teacher_name](checkpoint=model_path + "/sam_vit_h_4b8939.pth")
 sam_teacher.image_encoder.to(device)
 teacher_dim = 256
 
 # Parameters
 # Dataset parameters
-batch_size_train = 1
+batch_size_train = 4
+
+lr = 0.001
+adjusted_lr = lr * np.sqrt(1/2)
+weight_decay = 0.0005
+betas = betas=(0.95, 0.9995)
 
 # Datasets
 
@@ -51,8 +55,8 @@ sam_dataloader = DataLoader(sam_dataset, batch_size=1, shuffle=False)
 #   Subsets
 print(len(sam_dataset))
 indices1 = torch.randperm(len(sam_dataset))[:1000]
-indices2 = torch.randperm(len(sam_dataset))[:5000]
-indices3 = torch.randperm(len(sam_dataset))[:10000]
+indices2 = torch.randperm(len(sam_dataset))[:10000]
+indices3 = torch.randperm(len(sam_dataset))[:100000]
 
 subset1 = Subset(sam_dataset, indices1)
 subset2 = Subset(sam_dataset, indices2)
@@ -89,7 +93,7 @@ for student_name, student_dim in zip(student_names, student_dims) :
         
         # Loss 
         criterion = nn.MSELoss(reduction='sum')
-        optimizer = optim.Adam(student.parameters(), lr=0.001)
+        optimizer = optim.AdamW(student.parameters(), lr=adjusted_lr, weight_decay=weight_decay, betas=betas)
 
         name = teacher_name + "_" + student_name + "_" + data_name
 
