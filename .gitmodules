@@ -1,15 +1,27 @@
 [submodule "third_party/dinov2"]
 	path = third_party/dinov2
 	url = https://github.com/facebookresearch/dinov2
+	ignore = untracked
 [submodule "third_party/CLIP"]
 	path = third_party/CLIP
 	url = https://github.com/openai/CLIP
+	ignore = untracked
 [submodule "third_party/segment-anything"]
 	path = third_party/segment-anything
 	url = https://github.com/facebookresearch/segment-anything
+	ignore = untracked
 [submodule "third_party/vit-pytorch"]
 	path = third_party/vit-pytorch
 	url = https://github.com/lucidrains/vit-pytorch
+	ignore = untracked
 [submodule "third_party/open_clip"]
 	path = third_party/open_clip
 	url = https://github.com/mlfoundations/open_clip
+	ignore = untracked
+[submodule "third_party/MobileSAM"]
+	path = third_party/MobileSAM
+	url = https://github.com/ChaoningZhang/MobileSAM
+	ignore = untracked
+[submodule "third_party/wise-ft"]
+	path = third_party/wise_ft
+	url = https://github.com/JeremyMorlier/wise-ft

@@ -4,7 +4,6 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 import open_clip
 
-from scripts.distillation.training import run_epoch
 # Parameters
 # Dataset parameters
 data_path = "/nasbrain/datasets/imagenet"
@@ -20,6 +19,20 @@ student_name = 'ViT-S-32-alt'
 
 # Use GPU if available otherwise CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+# teacher
+print(open_clip.list_models())
+teacher_model, _, teacher_preprocess = open_clip.create_model_and_transforms(teacher_name, pretrained='laion2b_s34b_b79k', cache_dir="data/")
+torch.save(teacher_model.visual, "data/test.pt")
+teacher_tokenizer = open_clip.get_tokenizer(teacher_name)
+
+teacher_text = text = teacher_tokenizer(["a diagram", "a dog", "a cat"])
+# student 
+student_model, _, student_preprocess = open_clip.create_model_and_transforms(student_name)
+student_tokenizer = open_clip.get_tokenizer(student_name)
+
+
 
 transform_train = transforms.Compose(
         [ transforms.ToTensor(),
@@ -48,15 +61,6 @@ test_loader = torch.utils.data.DataLoader(
         shuffle=False, num_workers=4)
 
 
-
-# teacher
-teacher_model, _, teacher_preprocess = open_clip.create_model_and_transforms(teacher_name, pretrained='laion2b_s34b_b79k')
-teacher_tokenizer = open_clip.get_tokenizer(teacher_name)
-
-teacher_text = text = teacher_tokenizer(["a diagram", "a dog", "a cat"])
-# student 
-student_model, _, student_preprocess = open_clip.create_model_and_transforms(student_name)
-student_tokenizer = open_clip.get_tokenizer(student_name)
 
 
 criterion = nn.MSELoss(reduction='sum')
