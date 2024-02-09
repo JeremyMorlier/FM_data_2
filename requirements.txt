@@ -6,20 +6,20 @@ tqdm
 torch==2.1.0
 torchvision
 # dynov2
-omegaconf
+# omegaconf
 torchmetrics
-fvcore
-iopath
-submitit
+# fvcore
+# iopath
+# submitit
 # dynov2 extras
 # mmcv-full
 # mmsegmentation
 # segment anything
 opencv-python
-pycocotools
+# pycocotools
 matplotlib
-onnxruntime
-onnx
+# onnxruntime
+# onnx
 # OpenCLIP
 open_clip_torch
 # Hugging face datasets
