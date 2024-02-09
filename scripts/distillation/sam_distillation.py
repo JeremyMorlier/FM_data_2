@@ -74,8 +74,8 @@ iterations = 55000
 checkpoints = [10, 100, 1000, 5000, 10000, 20000, 30000, 40000, iterations]
 # dataloaders = [sam_dataloader1, sam_dataloader2, sam_dataloader3, random_dataloader]
 # data_names = ["sam1000", "sam5000", "sam10000", "random"]
-dataloaders = [sam_dataloader1, sam_dataloader3, random_dataloader]
-data_names = ["sam1000", "sam10000", "random"]
+dataloaders = [sam_dataloader1, sam_dataloader3]
+data_names = ["sam1000", "sam10000"]
 #dataloaders = [random_dataloader, white_dataloader]
 
 results = []
